@@ -1,6 +1,8 @@
 --crating DDL queries for Bronze layer
 
 --creating DDL for CRM sourse
+IF OBJECT_ID('bronze.crm_cust_info','U') is Not Null
+	DROP TABLE bronze.crm_cust_info;
 create table bronze.crm_cust_info (
 cst_id int,
 cst_key	nvarchar(50),
@@ -12,7 +14,8 @@ cst_create_date date
 );
 go
 
-
+IF OBJECT_ID('bronze.crm_prd_info','U') is Not Null
+	DROP TABLE bronze.crm_prd_info;
 create table bronze.crm_prd_info (
 prd_id	int,
 prd_key	nvarchar(50),
@@ -24,6 +27,8 @@ prd_end_dt datetime
 );
 go
 
+IF OBJECT_ID('bronze.crm_sales_details','U') is Not Null
+	DROP TABLE bronze.crm_sales_details;
 create table bronze.crm_sales_details (
 sls_ord_num nvarchar(50),	
 sls_prd_key	nvarchar(50),	
@@ -38,6 +43,8 @@ sls_price int
 go
 
 --creating DDL for ERP source
+IF OBJECT_ID('bronze.erp_CUST_AZ12','U') is Not Null
+	DROP TABLE bronze.erp_CUST_AZ12;
 create table bronze.erp_CUST_AZ12 (
 CID	nvarchar(50),
 BDATE date,	
@@ -45,12 +52,16 @@ GEN nvarchar(50)
 );
 go
 
+IF OBJECT_ID('bronze.erp_loc_a101','U') is Not Null
+	DROP TABLE bronze.erp_loc_a101;
 create table bronze.erp_loc_a101 (
 CID	 nvarchar(50),
 CNTRY nvarchar(50)
 );
 go
 
+IF OBJECT_ID('bronze.erp_px_cat_g1v2','U') is Not Null
+	DROP TABLE bronze.erp_px_cat_g1v2;
 create table bronze.erp_px_cat_g1v2 (
 ID 	 nvarchar(50),	
 CAT	nvarchar(50),
