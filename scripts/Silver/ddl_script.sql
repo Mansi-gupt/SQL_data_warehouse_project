@@ -13,6 +13,14 @@ Script Purpose:
 	  Run this script to re-define the DDL structure of 'silver' Tables
 ===============================================================================
 */
+/*
+--steps to create silver layer
+1.explore & understand data
+2.data cleaning - a.check quality of data b.write data transformation c.insert data into silver layer
+3.validating - check data correctness
+4.data documenting(data flow diagram and data integration diagram) versioning in git
+*/
+
 --creating DDL for CRM sourse
 
 IF OBJECT_ID('silver.crm_cust_info','U') is Not Null
