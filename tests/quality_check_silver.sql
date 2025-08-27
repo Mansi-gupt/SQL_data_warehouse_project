@@ -1,4 +1,4 @@
---checkinfg quality of silver layer tables data 
+--checking quality of silver layer tables data 
 
 /*
 ===============================================================================
