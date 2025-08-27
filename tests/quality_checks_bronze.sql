@@ -1,5 +1,24 @@
 --checking data quality of bronze layer to load data in silver layer.
 /*
+===============================================================================
+Quality Checks
+===============================================================================
+Script Purpose:
+    This script performs various quality checks for data consistency, accuracy, 
+    and standardization across the 'bronze' layer. It includes checks for:
+    - Null or duplicate primary keys.
+    - Unwanted spaces in string fields.
+    - Data standardization and consistency.
+    - Invalid date ranges and orders.
+    - Data consistency between related fields.
+	-bronze layer contains row data from sourses so after running this script you will find out data quality issue that we will fix in silver layer.
+Usage Notes:
+    - Run these checks after data loading bronze Layer.
+    - Investigate and resolve any discrepancies found during the checks.
+===============================================================================
+*/
+
+/*
 ====================================================
 --checking 1st table - crm_cust_info
 ====================================================
@@ -7,6 +26,7 @@
 SELECT * FROM bronze.crm_cust_info;
 
 --quality check 1.- primary key should be unique + not null
+--make sure keys are able to join keys in other table
 	--expectation - no result
 select cst_id,count(*) from bronze.crm_cust_info group by cst_id having count(*)>1 or cst_id is null
 --choosing latest record in case of duplicate primary key by using cst_create_date column
@@ -99,9 +119,69 @@ SELECT sls_ship_dt FROM bronze.crm_sales_details where isdate(sls_ship_dt)=0 or 
 select case when isdate(sls_order_dt)=1 then cast(cast(sls_order_dt as varchar) as date)
 	else Null end sls_order_dt FROM bronze.crm_sales_details where sls_order_dt is null or isdate(sls_order_dt) = 0
  
+--check for invalid order date - order date should be less than ship date and due date
+select * from bronze.crm_sales_details where sls_order_dt > sls_ship_dt or sls_order_dt > sls_due_dt
 
+select * FROM bronze.crm_sales_details where sls_price <=0 or sls_price is null OR sls_sales != sls_quantity * ABS(sls_price) 
+select * FROM bronze.crm_sales_details where sls_quantity <= 0 or sls_quantity is null
+select * FROM bronze.crm_sales_details where sls_sales<=0 or sls_sales is null
+
+select sls_sales,case when sls_sales <= 0 OR sls_sales != ABS(sls_quantity) * ABS(sls_price)  then ABS(sls_quantity) * ABS(sls_price) 
+	else sls_sales end as sls_sales
+ FROM bronze.crm_sales_details
+
+ select sls_quantity,case 
+	when sls_quantity <= 0 OR sls_quantity != ABS(sls_sales) / nullif(sls_price,0)  then ABS(sls_quantity) * ABS(sls_price) 
+	else sls_quantity end as sls_quantity
+ FROM bronze.crm_sales_details
+
+  select sls_price,case 
+	when sls_price <= 0 OR sls_price != ABS(sls_sales) / nullif(sls_quantity,0)  then ABS(sls_quantity) * ABS(sls_price) 
+	else sls_price end as sls_price
+ FROM bronze.crm_sales_details
+/*
+====================================================
+--checking table - erp_CUST_AZ12
+====================================================
+*/
 SELECT * FROM bronze.erp_CUST_AZ12;
+SELECT * FROM bronze.erp_CUST_AZ12 where cid != trim(cid);
+SELECT * FROM bronze.erp_CUST_AZ12 where bdate is null isdate(BDATE)=0;
+
+select cast(bdate as varchar),case when isdate(cast(bdate as varchar)) = 0 then Null 
+else bdate end as bdate
+	FROM bronze.erp_CUST_AZ12  where isdate(cast(bdate as varchar)) = 0 
+
+SELECT distinct gen FROM bronze.erp_CUST_AZ12;
+select case when upper(gen) = 'F' OR upper(GEN) ='FEMALE' THEN 'Female'
+	when  upper(gen) = 'M' OR upper(GEN) ='MALE' THEN 'Male'
+	else 'N/A' end as gen
+	FROM bronze.erp_CUST_AZ12;
+
+/*
+====================================================
+--checking table - erp_loc_a101
+====================================================
+*/
 
 SELECT * FROM bronze.erp_loc_a101;
+SELECT * FROM bronze.erp_loc_a101 where cid !=trim(cid);
+select distinct cntry FROM bronze.erp_loc_a101
 
+select *,case when upper(cntry) in('DE','GERMANY') then 'Germany'
+	when upper(cntry) in('USA','UNITED STATES','US') then 'United States'
+	else cntry end as cntry
+FROM bronze.erp_loc_a101 
+
+/*
+====================================================
+--checking table - erp_px_cat_g1v2
+====================================================
+*/
 SELECT  * FROM bronze.erp_px_cat_g1v2;
+
+SELECT  * FROM bronze.erp_px_cat_g1v2 where id not in (select distinct cat_id from silver.crm_prd_info)
+
+SELECT  * FROM bronze.erp_px_cat_g1v2 where cat != trim(cat) or subcat != trim(subcat)
+
+select distinct maintenance from bronze.erp_px_cat_g1v2;
