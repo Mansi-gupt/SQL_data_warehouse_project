@@ -75,27 +75,35 @@ select * from silver.crm_prd_info where prd_start_dt > prd_end_dt
 
 -- Check for Invalid Date Orders (Order Date > Shipping/Due Dates)
 -- Expectation: No Results
+select * from silver.crm_sales_details where sls_order_dt > sls_due_dt or sls_order_dt > sls_ship_dt
 
 -- Check Data Consistency: Sales = Quantity * Price
 -- Expectation: No Results
+select * from  silver.crm_sales_details where sls_Price <=0 or sls_Price is null or sls_Price != sls_sales / nullif(sls_Quantity,0)
+select * from  silver.crm_sales_details where sls_Quantity <=0 or sls_Quantity is null
+select * from  silver.crm_sales_details where sls_sales != sls_Quantity * sls_Price or sls_sales <=0 or sls_sales is null
 
 -- ====================================================================
 -- Checking 'silver.erp_cust_az12'
 -- ====================================================================
 -- Identify Out-of-Range Dates
 -- Expectation: Birthdates between 1924-01-01 and Today
-
+select * from silver.erp_cust_az12 where bdate > getdate() or bdate < cast('1924-01-01' as date)
 -- Data Standardization & Consistency
+select distinct gen FROM silver.erp_cust_az12;
 
 -- ====================================================================
 -- Checking 'silver.erp_loc_a101'
 -- ====================================================================
 -- Data Standardization & Consistency
+select distinct cntry from silver.erp_loc_a101 
 
 -- ====================================================================
 -- Checking 'silver.erp_px_cat_g1v2'
 -- ====================================================================
 -- Check for Unwanted Spaces
 -- Expectation: No Results
+select * from silver.erp_px_cat_g1v2 where id != trim(id) OR subcat != TRIM(subcat) OR maintenance != TRIM(maintenance);
 
 -- Data Standardization & Consistency
+select distinct MAINTENANCE from silver.erp_px_cat_g1v2
